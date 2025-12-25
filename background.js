@@ -1,10 +1,42 @@
 var context_id = -1;
 
-chrome.input.ime.onFocus.addListener(function (context) {
-  context_id = context.contextID;
+// Keep-alive workaround using Offscreen API
+// https://issues.chromium.org/issues/441317290
+async function createOffscreen() {
+  try {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['BLOBS'],
+      justification: 'keep service worker running',
+    });
+  } catch (e) {
+    // It's already running, good enough
+    if (!e.message.startsWith('Only a single offscreen')) {
+      throw e;
+    }
+  }
+}
+
+chrome.runtime.onStartup.addListener(createOffscreen);
+createOffscreen(); // Also run on first load/install
+
+chrome.runtime.onMessage.addListener((msg) => {
+  // Just receiving the message keeps the SW alive
+});
+
+chrome.storage.local.get(['contextID'], function(result) {
+  if (result.contextID) {
+    context_id = result.contextID;
+  }
 });
 
 var pressed_time = null;
+
+chrome.input.ime.onFocus.addListener(function (context) {
+  context_id = context.contextID;
+  chrome.storage.local.set({ contextID: context_id });
+  pressed_time = null;
+});
 
 chrome.input.ime.onKeyEvent.addListener(function (engineID, keyData) {
   // Something other than control?
@@ -14,7 +46,7 @@ chrome.input.ime.onKeyEvent.addListener(function (engineID, keyData) {
     keyData.shiftKey ||
     !(keyData.code == "ControlLeft" || keyData.code == "ControlRight")
   ) {
-    pressed_time = false;
+    pressed_time = null;
     return false;
   }
   // Start tracking on keydown
@@ -27,7 +59,7 @@ chrome.input.ime.onKeyEvent.addListener(function (engineID, keyData) {
 
   // Press too long?
   let duration = Date.now() - pressed_time;
-  pressed_time = false;
+  pressed_time = null;
   if (duration > 1000) {
     return false;
   }
