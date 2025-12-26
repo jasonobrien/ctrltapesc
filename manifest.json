@@ -1,7 +1,7 @@
 {
   "name": "Tap Ctrl for Escape",
   "description": "Overload Ctrl key to be Escape on tap",
-  "version": "1.0",
+  "version": "2.0",
   "manifest_version": 3,
   "icons": {
     "16": "images/icon_16.png",
@@ -11,10 +11,11 @@
   },
   "permissions": [
     "input",
+    "storage",
     "offscreen"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "service_worker.js"
   },
   "input_components": [
     {
