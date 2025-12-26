@@ -24,17 +24,10 @@ chrome.runtime.onMessage.addListener((msg) => {
   // Just receiving the message keeps the SW alive
 });
 
-chrome.storage.local.get(['contextID'], function(result) {
-  if (result.contextID) {
-    context_id = result.contextID;
-  }
-});
-
 var pressed_time = null;
 
 chrome.input.ime.onFocus.addListener(function (context) {
   context_id = context.contextID;
-  chrome.storage.local.set({ contextID: context_id });
   pressed_time = null;
 });
 

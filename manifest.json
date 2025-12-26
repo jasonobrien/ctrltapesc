@@ -11,7 +11,6 @@
   },
   "permissions": [
     "input",
-    "storage",
     "offscreen"
   ],
   "background": {
