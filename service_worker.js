@@ -1,4 +1,5 @@
 var context_id = -1;
+var timeout = 1000;
 
 // Keep-alive workaround using Offscreen API
 // https://issues.chromium.org/issues/441317290
@@ -22,6 +23,16 @@ createOffscreen(); // Also run on first load/install
 
 chrome.runtime.onMessage.addListener((msg) => {
   // Just receiving the message keeps the SW alive
+});
+
+chrome.storage.sync.get({ timeout: 1000 }, (result) => {
+  timeout = result.timeout;
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes.timeout) {
+    timeout = changes.timeout.newValue;
+  }
 });
 
 chrome.storage.managed.get(['contextID'], function(result) {
@@ -60,7 +71,7 @@ chrome.input.ime.onKeyEvent.addListener(function (engineID, keyData) {
   // Press too long?
   let duration = Date.now() - pressed_time;
   pressed_time = null;
-  if (duration > 1000) {
+  if (duration > timeout) {
     return false;
   }
 
